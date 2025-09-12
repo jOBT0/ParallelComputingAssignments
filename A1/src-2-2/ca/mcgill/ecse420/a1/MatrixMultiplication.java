@@ -15,6 +15,7 @@ public class MatrixMultiplication {
 		double[][] b = generateRandomMatrix(MATRIX_SIZE, MATRIX_SIZE);
 		sequentialMultiplyMatrix(a, b);
 		parallelMultiplyMatrix(a, b);	
+		
 	}
 	
 	/**
@@ -25,7 +26,30 @@ public class MatrixMultiplication {
 	 * @return the result of the multiplication
 	 * */
 	public static double[][] sequentialMultiplyMatrix(double[][] a, double[][] b) {
+		int rowsA = a.length;
+		int colsA = a[0].length;
+		int rowsB = b.length;
+		int colsB = b[0].length;
 		
+		//check if multiplication is possible
+		if (colsA != rowsB) {
+			throw new IllegalArgumentExcpetion("Matrix A's columns must match Matrix B's rows.");
+		}
+		//Result matrix
+		double[][] result = new double[rowsA][colsB];
+		
+		//Perform sequential matrix multiplication
+		for (int i=0; i < rowsA; i++) {
+			for (int j = 0; j < colsB; j++) {
+				double sum = 0;
+				for (int k = 0; k < colsA; k++) {
+					sum += a[i][k] * b[k][j];
+				}
+				result[i][j] = sum;
+			}
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -33,9 +57,35 @@ public class MatrixMultiplication {
 	 * The two matrices are randomly generated
 	 * @param a is the first matrix
 	 * @param b is the second matrix
-	 * @return the result of the multiplication
+	 * @return the result of the multiplicationwha
 	 * */
-        public static double[][] parallelMultiplyMatrix(double[][] a, double[][] b) {
+    public static double[][] parallelMultiplyMatrix(double[][] a, double[][] b) {
+    	int rowsA = a.length;
+    	int colsA = a[0].length;
+    	int colsB = b[0].length;
+    	
+    	double[][] result = new double[rowsA][colsB];
+    	Thread[i] rowResults = new Thread[rowsA];
+    	
+    	for (int i = 0; i < colsB; i++) {
+    		final int row = i;
+    		rowResults[i] = new Thread(() -> {
+    			for (int j =0; j < colsB; j++) {
+    				double sum = 0;
+    				for (int k = 0; k < colsA; k++) {
+    					sum += a[row][k] * b[k][j]; 
+    				}
+    				result[row][j] = sum;
+    			}
+    		});
+    		rowResults[i].start();
+    	}
+    	
+    	for (Thread rowResult : rowResults) {
+    		rowResult.join();  //wait for all threads to finish
+    	}
+    	
+    	return result;
 		
 	}
         
