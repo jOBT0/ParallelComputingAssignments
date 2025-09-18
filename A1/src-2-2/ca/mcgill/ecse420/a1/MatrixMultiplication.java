@@ -2,19 +2,21 @@ package ca.mcgill.ecse420.a1;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class MatrixMultiplication {
 	
-	private static final int NUMBER_THREADS = 1;
-	private static final int MATRIX_SIZE = 2000;
+	private static int NUMBER_THREADS = 1;
+	private static final int MATRIX_SIZE = 1000;
 
         public static void main(String[] args) {
 		
 		// Generate two random matrices, same size
 		double[][] a = generateRandomMatrix(MATRIX_SIZE, MATRIX_SIZE);
 		double[][] b = generateRandomMatrix(MATRIX_SIZE, MATRIX_SIZE);
-		sequentialMultiplyMatrix(a, b);
-		parallelMultiplyMatrix(a, b);	
+		//sequentialMultiplyMatrix(a, b);
+		//parallelMultiplyMatrix(a, b);	
+		benchmarkMatrixMultiplication(a,b);
 		
 	}
 	
@@ -33,7 +35,7 @@ public class MatrixMultiplication {
 		
 		//check if multiplication is possible
 		if (colsA != rowsB) {
-			throw new IllegalArgumentExcpetion("Matrix A's columns must match Matrix B's rows.");
+			throw new IllegalArgumentException("Matrix A's columns must match Matrix B's rows.");
 		}
 		//Result matrix
 		double[][] result = new double[rowsA][colsB];
@@ -65,29 +67,60 @@ public class MatrixMultiplication {
     	int colsB = b[0].length;
     	
     	double[][] result = new double[rowsA][colsB];
-    	Thread[i] rowResults = new Thread[rowsA];
+    	ExecutorService executor = Executors.newFixedThreadPool(NUMBER_THREADS);
+
+    	// Submit one task per row
+        for (int i = 0; i < rowsA; i++) {
+            final int row = i;
+            executor.submit(() -> {
+                for (int j = 0; j < colsB; j++) {
+                    double sum = 0;
+                    for (int k = 0; k < colsA; k++) {
+                        sum += a[row][k] * b[k][j];
+                    }
+                    result[row][j] = sum;
+                }
+            });
+        }
     	
-    	for (int i = 0; i < colsB; i++) {
-    		final int row = i;
-    		rowResults[i] = new Thread(() -> {
-    			for (int j =0; j < colsB; j++) {
-    				double sum = 0;
-    				for (int k = 0; k < colsA; k++) {
-    					sum += a[row][k] * b[k][j]; 
-    				}
-    				result[row][j] = sum;
-    			}
-    		});
-    		rowResults[i].start();
-    	}
-    	
-    	for (Thread rowResult : rowResults) {
-    		rowResult.join();  //wait for all threads to finish
-    	}
-    	
-    	return result;
+        // Shutdown executor and wait for all tasks to finish
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Matrix multiplication interrupted", e);
+        }
+
+        return result;
 		
 	}
+    
+    public static void benchmarkMatrixMultiplication(double[][] a, double[][] b) {
+    	// Time the sequential version once for baseline
+        long startSeq = System.nanoTime();
+        sequentialMultiplyMatrix(a, b);
+        long endSeq = System.nanoTime();
+        double sequentialTime = (endSeq - startSeq) / 1_000_000_000.0; // seconds
+        System.out.printf("Sequential Time: %.4f seconds%n", sequentialTime);
+
+     // Test different thread counts
+        for (int threads = 1; threads <= 40; threads++) {
+            // Set global variable via reflection or redesign as below
+            setNumberThreads(threads); // Custom method
+            long start = System.nanoTime();
+            parallelMultiplyMatrix(a, b);
+            long end = System.nanoTime();
+            double parallelTime = (end - start) / 1_000_000_000.0;
+            double speedup = sequentialTime / parallelTime;
+            System.out.printf("Threads: %2d | Time: %.3f s | Speedup: %.2fx%n", threads, parallelTime, speedup);
+        }
+        
+    }
+
         
         /**
          * Populates a matrix of given size with randomly generated integers between 0-10.
@@ -104,5 +137,9 @@ public class MatrixMultiplication {
         }
         return matrix;
     }
+        
+        public static void setNumberThreads(int threads) {
+            NUMBER_THREADS = threads;
+        }
 	
 }
