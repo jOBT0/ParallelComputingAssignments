@@ -23,7 +23,12 @@ public class DiningPhilosophers {
                     Object leftChopstick = chopsticks[i];
                     Object rightChopstick = chopsticks[(i + 1) % numberOfPhilosophers];
 
-                    philosophers[i] = new Philosopher(i, leftChopstick, rightChopstick);
+                    // For philosopher 0, reverse the chopsticks
+                    if (i == 0) {
+                        philosophers[i] = new Philosopher(i, rightChopstick, leftChopstick); // reversed
+                    } else {
+                        philosophers[i] = new Philosopher(i, leftChopstick, rightChopstick);
+                    }
                     executorService.execute(philosophers[i]);
                 }
 
