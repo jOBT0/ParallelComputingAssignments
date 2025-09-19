@@ -10,18 +10,18 @@ public class DiningPhilosophers {
 
 		int numberOfPhilosophers = 5;
                 Philosopher[] philosophers = new Philosopher[numberOfPhilosophers];
-                Object[] chopsticks = new Object[numberOfPhilosophers];
+                ReentrantLock[] chopsticks = new ReentrantLock[numberOfPhilosophers];
                 
                 // Initialize chopstick objects
                 for (int i = 0; i < numberOfPhilosophers; i++) {
-                    chopsticks[i] = new Object();
+                    chopsticks[i] = new ReentrantLock(true);
                 }
                 
                 ExecutorService executorService = Executors.newFixedThreadPool(numberOfPhilosophers);
 
                 for (int i = 0; i < numberOfPhilosophers; i++) {
-                    Object leftChopstick = chopsticks[i];
-                    Object rightChopstick = chopsticks[(i + 1) % numberOfPhilosophers];
+                	ReentrantLock leftChopstick = chopsticks[i];
+                	ReentrantLock rightChopstick = chopsticks[(i + 1) % numberOfPhilosophers];
 
                     // For philosopher 0, reverse the chopsticks
                     if (i == 0) {
@@ -40,10 +40,10 @@ public class DiningPhilosophers {
 	public static class Philosopher implements Runnable {
 
 		private final int id;
-        private final Object leftChopstick;
-        private final Object rightChopstick;
+        private final ReentrantLock leftChopstick;
+        private final ReentrantLock rightChopstick;
         
-        public Philosopher(int id, Object leftChopstick, Object rightChopstick) {
+        public Philosopher(int id, ReentrantLock leftChopstick, ReentrantLock rightChopstick) {
             this.id = id;
             this.leftChopstick = leftChopstick;
             this.rightChopstick = rightChopstick;
@@ -70,12 +70,26 @@ public class DiningPhilosophers {
             //Thread.sleep((int)(Math.random() * 100));
         }
 
-        private void pickUpChopsticks() {
-            synchronized (leftChopstick) {
-                System.out.println("Philosopher " + id + " picked up left chopstick.");
-                synchronized (rightChopstick) {
-                    System.out.println("Philosopher " + id + " picked up right chopstick.");
+        private void pickUpChopsticks() throws InterruptedException { 	
+        	while (true) {
+                // Try to pick up both locks without getting stuck
+                boolean leftAcquired = leftChopstick.tryLock();
+                boolean rightAcquired = rightChopstick.tryLock();
+
+                if (leftAcquired && rightAcquired) {
+                    System.out.println("Philosopher " + id + " picked up both chopsticks.");
+                    return;
                 }
+
+                // If only one was acquired, release it and retry after backoff
+                if (leftAcquired) {
+                    leftChopstick.unlock();
+                }
+                if (rightAcquired) {
+                    rightChopstick.unlock();
+                }
+
+                Thread.sleep((int) (Math.random() * 20)); // small backoff to reduce contention
             }
         }
 
@@ -85,6 +99,8 @@ public class DiningPhilosophers {
         }
 
         private void putDownChopsticks() {
+        	leftChopstick.unlock();
+            rightChopstick.unlock();
             System.out.println("Philosopher " + id + " put down chopsticks.");
         }
 			
