@@ -3,6 +3,8 @@ package ca.mcgill.ecse420.a1;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class MatrixMultiplication {
 	
@@ -11,14 +13,49 @@ public class MatrixMultiplication {
 
         public static void main(String[] args) {
 		
+        	double[][] aTest = {
+        		    {1, 2},
+        		    {3, 4}
+        		};
+
+        		double[][] bTest = {
+        		    {5, 6},
+        		    {7, 8}
+        		};
+
+        		double[][] resultTest = sequentialMultiplyMatrix(aTest, bTest);
+
+        		// Print input and output
+        		System.out.println("Matrix A:");
+        		printMatrix(aTest);
+        		System.out.println("Matrix B:");
+        		printMatrix(bTest);
+        		System.out.println("Result (A x B):");
+        		printMatrix(resultTest);
+        		// --- End of test ---
 		// Generate two random matrices, same size
 		double[][] a = generateRandomMatrix(MATRIX_SIZE, MATRIX_SIZE);
 		double[][] b = generateRandomMatrix(MATRIX_SIZE, MATRIX_SIZE);
+		int optimalThreads = 8;
 		//sequentialMultiplyMatrix(a, b);
 		//parallelMultiplyMatrix(a, b);	
 		benchmarkMatrixMultiplication(a,b);
+		benchmarkVaryingMatrixSizes(optimalThreads);
+		// --- Small 2x2 test case for validation output ---
+		
+
 		
 	}
+        
+        private static void printMatrix(double[][] matrix) {
+            for (double[] row : matrix) {
+                for (double val : row) {
+                    System.out.printf("%6.1f ", val);
+                }
+                System.out.println();
+            }
+        }
+        
 	
 	/**
 	 * Returns the result of a sequential matrix multiplication
@@ -100,26 +137,78 @@ public class MatrixMultiplication {
 	}
     
     public static void benchmarkMatrixMultiplication(double[][] a, double[][] b) {
-    	// Time the sequential version once for baseline
+        // Time the sequential version once for baseline
         long startSeq = System.nanoTime();
         sequentialMultiplyMatrix(a, b);
         long endSeq = System.nanoTime();
         double sequentialTime = (endSeq - startSeq) / 1_000_000_000.0; // seconds
         System.out.printf("Sequential Time: %.4f seconds%n", sequentialTime);
 
-     // Test different thread counts
-        for (int threads = 1; threads <= 40; threads++) {
-            // Set global variable via reflection or redesign as below
-            setNumberThreads(threads); // Custom method
-            long start = System.nanoTime();
-            parallelMultiplyMatrix(a, b);
-            long end = System.nanoTime();
-            double parallelTime = (end - start) / 1_000_000_000.0;
-            double speedup = sequentialTime / parallelTime;
-            System.out.printf("Threads: %2d | Time: %.3f s | Speedup: %.2fx%n", threads, parallelTime, speedup);
+        // Create a CSV file
+        try (FileWriter csvWriter = new FileWriter("speedup_results.csv")) {
+            csvWriter.append("Threads,ParallelTime,Speedup\n");
+
+            // Test different thread counts
+            for (int threads = 1; threads <= 25; threads++) {
+                setNumberThreads(threads);
+
+                long start = System.nanoTime();
+                parallelMultiplyMatrix(a, b);
+                long end = System.nanoTime();
+
+                double parallelTime = (end - start) / 1_000_000_000.0;
+                double speedup = sequentialTime / parallelTime;
+
+                System.out.printf("Threads: %2d | Time: %.3f s | Speedup: %.2fx%n", threads, parallelTime, speedup);
+                
+                // Write to CSV
+                csvWriter.append(String.format("%d,%.4f,%.4f\n", threads, parallelTime, speedup));
+            }
+
+            System.out.println("Speedup data written to speedup_results.csv");
+
+        } catch (IOException e) {
+            System.err.println("Error writing CSV: " + e.getMessage());
         }
-        
     }
+    
+    public static void benchmarkVaryingMatrixSizes(int optimalThreads) {
+        int[] sizes = {100, 200, 500, 1000, 2000, 3000, 4000};
+
+        try (FileWriter writer = new FileWriter("matrix_size_vs_time.csv")) {
+            writer.write("MatrixSize,SequentialTime,ParallelTime\n");
+
+            for (int size : sizes) {
+                System.out.printf("Testing matrix size: %dx%d\n", size, size);
+
+                double[][] a = generateRandomMatrix(size, size);
+                double[][] b = generateRandomMatrix(size, size);
+
+                // Sequential timing
+                long startSeq = System.nanoTime();
+                sequentialMultiplyMatrix(a, b);
+                long endSeq = System.nanoTime();
+                double sequentialTime = (endSeq - startSeq) / 1_000_000_000.0;
+
+                // Parallel timing with optimalThreads
+                setNumberThreads(optimalThreads);
+                long startPar = System.nanoTime();
+                parallelMultiplyMatrix(a, b);
+                long endPar = System.nanoTime();
+                double parallelTime = (endPar - startPar) / 1_000_000_000.0;
+
+                writer.write(String.format("%d,%.4f,%.4f\n", size, sequentialTime, parallelTime));
+                System.out.printf("Size: %d | Sequential: %.4f s | Parallel (%d threads): %.4f s\n",
+                                  size, sequentialTime, optimalThreads, parallelTime);
+            }
+
+            System.out.println("Benchmark complete. Results saved to matrix_size_vs_time.csv.");
+
+        } catch (IOException e) {
+            System.err.println("Error writing results: " + e.getMessage());
+        }
+    }
+
 
         
         /**
