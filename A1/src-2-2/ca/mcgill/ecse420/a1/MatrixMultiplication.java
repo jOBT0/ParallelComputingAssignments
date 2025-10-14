@@ -1,13 +1,11 @@
 package ca.mcgill.ecse420.a1;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.io.FileWriter;
 import java.io.IOException;
-
 public class MatrixMultiplication {
-	
+
 	private static int NUMBER_THREADS = 1;
 	private static final int MATRIX_SIZE = 1000;
 
@@ -24,7 +22,6 @@ public class MatrixMultiplication {
         		};
 
         		double[][] resultTest = sequentialMultiplyMatrix(aTest, bTest);
-
         		// Print input and output
         		System.out.println("Matrix A:");
         		printMatrix(aTest);
@@ -42,9 +39,6 @@ public class MatrixMultiplication {
 		benchmarkMatrixMultiplication(a,b);
 		benchmarkVaryingMatrixSizes(optimalThreads);
 		// --- Small 2x2 test case for validation output ---
-		
-
-		
 	}
         
         private static void printMatrix(double[][] matrix) {
@@ -75,8 +69,7 @@ public class MatrixMultiplication {
 			throw new IllegalArgumentException("Matrix A's columns must match Matrix B's rows.");
 		}
 		//Result matrix
-		double[][] result = new double[rowsA][colsB];
-		
+		double[][] result = new double[rowsA][colsB];	
 		//Perform sequential matrix multiplication
 		for (int i=0; i < rowsA; i++) {
 			for (int j = 0; j < colsB; j++) {
@@ -86,8 +79,7 @@ public class MatrixMultiplication {
 				}
 				result[i][j] = sum;
 			}
-		}
-		
+		}	
 		return result;
 	}
 	
@@ -101,11 +93,9 @@ public class MatrixMultiplication {
     public static double[][] parallelMultiplyMatrix(double[][] a, double[][] b) {
     	int rowsA = a.length;
     	int colsA = a[0].length;
-    	int colsB = b[0].length;
-    	
+    	int colsB = b[0].length;   	
     	double[][] result = new double[rowsA][colsB];
     	ExecutorService executor = Executors.newFixedThreadPool(NUMBER_THREADS);
-
     	// Submit one task per row
         for (int i = 0; i < rowsA; i++) {
             final int row = i;
@@ -132,8 +122,7 @@ public class MatrixMultiplication {
             throw new RuntimeException("Matrix multiplication interrupted", e);
         }
 
-        return result;
-		
+        return result;	
 	}
     
     public static void benchmarkMatrixMultiplication(double[][] a, double[][] b) {
@@ -147,24 +136,18 @@ public class MatrixMultiplication {
         // Create a CSV file
         try (FileWriter csvWriter = new FileWriter("speedup_results.csv")) {
             csvWriter.append("Threads,ParallelTime,Speedup\n");
-
             // Test different thread counts
             for (int threads = 1; threads <= 25; threads++) {
                 setNumberThreads(threads);
-
                 long start = System.nanoTime();
                 parallelMultiplyMatrix(a, b);
                 long end = System.nanoTime();
-
                 double parallelTime = (end - start) / 1_000_000_000.0;
                 double speedup = sequentialTime / parallelTime;
-
-                System.out.printf("Threads: %2d | Time: %.3f s | Speedup: %.2fx%n", threads, parallelTime, speedup);
-                
+                System.out.printf("Threads: %2d | Time: %.3f s | Speedup: %.2fx%n", threads, parallelTime, speedup);             
                 // Write to CSV
                 csvWriter.append(String.format("%d,%.4f,%.4f\n", threads, parallelTime, speedup));
             }
-
             System.out.println("Speedup data written to speedup_results.csv");
 
         } catch (IOException e) {
@@ -208,9 +191,6 @@ public class MatrixMultiplication {
             System.err.println("Error writing results: " + e.getMessage());
         }
     }
-
-
-        
         /**
          * Populates a matrix of given size with randomly generated integers between 0-10.
          * @param numRows number of rows

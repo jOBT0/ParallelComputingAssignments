@@ -1,5 +1,4 @@
 package ca.mcgill.ecse420.a1;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
@@ -35,8 +34,6 @@ public class DiningPhilosophers {
                 executorService.shutdown();
 	}
 	
-	
-
 	public static class Philosopher implements Runnable {
 
 		private final int id;

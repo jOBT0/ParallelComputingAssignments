@@ -11,8 +11,15 @@ public class DeadlockDemo {
         }
 
         synchronized void bow(Friend bower) {
-            System.out.println(this.name + " bows to " + bower.name);
-            bower.bowBack(this); // Waiting for the other to finish
+        	Friend first = this.name.compareTo(bower.name) < 0 ? this : bower;
+            Friend second = this == first ? bower : this;
+
+            synchronized (first) {
+                synchronized (second) {
+                    System.out.println(this.name + " bows to " + bower.name);
+                    bower.bowBack(this);
+                }
+            }
         }
 
         synchronized void bowBack(Friend bower) {
