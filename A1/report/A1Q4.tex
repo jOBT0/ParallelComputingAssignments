@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage[a4paper, margin=1.5in]{geometry}
+\begin{document}
+
+{\raggedright \bf{4.1} } \\ 
+
+The speedup, depending on the number of n processors, can be determined from Amdahl's Law.
+\begin{align*}
+    speedup &= \frac{1}{(1-p) + \frac{p}{n}} \\ 
+            &= \frac{1}{(1-0.6) + \frac{0.6}{n}} \\
+            &= \frac{1}{0.4 + \frac{0.6}{n}} \\
+            &= \frac{n}{0.4n + 0.6} \\ 
+\end{align*}
+
+The maximum theoretical speedup happens when n approaches inifinity, making the parallel portion take no time. 
+\begin{align*}
+    speedup_{max} = speedup_{n \rightarrow \infty } = \frac{1}{0.4 + 0} = 2.5 \\ 
+\end{align*}
+
+
+{\raggedright \bf{4.2} } \\ 
+
+We recalculate the speedup now with a 30\% sequential program.
+\begin{align*}
+    s_n &= \frac{1}{(1-p) + \frac{p}{n}} \\ 
+        &= \frac{1}{(1-0.7) + \frac{0.7}{n}} \\ 
+        &= \frac{1}{0.3 + \frac{0.7}{n}} \\ 
+        &= \frac{n}{0.3n + 0.7} \\ 
+\end{align*}
+
+The new speedup is double the original speedup, and the new sequential portion is decreased by a factor of k.
+\begin{align*}
+    s'_n &\ge 2s_n \\
+    \frac{n}{\frac{0.3n}{k} + 0.7} &\ge \frac{2n}{0.3n + 0.7} \\ 
+    \frac{1}{\frac{0.3n}{k} + 0.7} &\ge \frac{2}{0.3n + 0.7} \\ 
+    \frac{0.3n}{k} + 0.7 &\le \frac{0.3n}{2} + \frac{0.7}{2} \\ 
+    \frac{0.3n}{k} &\le 0.15n - 0.35 \\ 
+    k &\ge \frac{0.3n}{0.15n - 0.35} \\ 
+\end{align*}
+
+
+{\raggedright \bf{4.3} } \\ 
+
+The sequential portion can be written as $f$, and the parallel portion as $1-f$. The new sequential portion is now $f/3$, which affect the new parallel portion of now $1-f/3$. 
+\begin{align*}
+s'_n &= 2s_n \\
+\frac{1}{\frac{f}{3} + \frac{1-f/3}{n}} &= \frac{2}{f + \frac{1-f}{n}} \\
+\frac{f}{3} + \frac{1-\frac{f}{3}}{n} &= \frac{f}{2} + \frac{1-f}{2n} \\
+2f + \frac{6(1-\frac{f}{3})}{n} &= 3f + \frac{3(1-f)}{n} \\
+2f + \frac{6-2f}{n} &= 3f + \frac{3-3f}{n} \\
+\frac{6-2f}{n} - \frac{3-3f}{n} &= f \\
+\frac{6-2f-3+3f}{n} &= f \\
+\frac{3+f}{n} &= f \\
+3+f &= fn \\
+3 &= fn - f = f(n-1) \\
+f &= \frac{3}{n-1} \\
+\end{align*}
+
+
+
+\end{document}
+
