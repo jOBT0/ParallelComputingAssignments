@@ -1,3 +1,5 @@
+package ca.mcgill.ecse420.a2;
+
 public class BakeryLockTest {
 
     private static volatile int insideCS = 0;         // shared counter

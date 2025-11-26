@@ -1,3 +1,5 @@
+package ca.mcgill.ecse420.a2;
+
 public class FilterLockTest {
     public static void main(String[] args) throws InterruptedException {
         for (int n = 2; n <= 8; n++) {

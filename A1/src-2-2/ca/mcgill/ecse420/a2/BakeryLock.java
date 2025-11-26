@@ -1,3 +1,5 @@
+package ca.mcgill.ecse420.a2;
+
 public class BakeryLock {
     private final int n;              // number of threads
     private final boolean[] flag;     // flag[i] = true means thread i wants to enter CS

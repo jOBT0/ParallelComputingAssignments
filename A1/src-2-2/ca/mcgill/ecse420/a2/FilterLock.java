@@ -1,3 +1,5 @@
+package ca.mcgill.ecse420.a2;
+
 public class FilterLock {
     private volatile int[] level;
     private volatile int[] victim;

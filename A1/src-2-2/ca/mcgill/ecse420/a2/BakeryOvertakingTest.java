@@ -1,3 +1,5 @@
+package ca.mcgill.ecse420.a2;
+
 public class BakeryOvertakingTest {
 
     private static final int N = 8;           // number of threads
