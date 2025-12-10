@@ -44,6 +44,9 @@ public class MatrixVectorParallel {
         private final double[] x;
         private final int row;
         private final int lo, hi;
+        private static final int THRESHOLD = 1000;   // ← experiment with 50, 100, 250, 500, 1000
+
+        
 
         DotProductTask(double[][] A, double[] x, int row, int lo, int hi) {
             this.A = A;
@@ -57,22 +60,27 @@ public class MatrixVectorParallel {
         public Double call() throws Exception {
             int length = hi - lo;
 
-            // Base case of recursion: one element
-            if (length == 1) {
-                return A[row][lo] * x[lo];
+            // ---------------------------------------
+            // 4.3: THRESHOLD TO REDUCE NUMBER OF TASKS
+            // ---------------------------------------
+            if (length <= THRESHOLD) {
+                double sum = 0.0;
+                for (int j = lo; j < hi; j++) {
+                    sum += A[row][j] * x[j];
+                }
+                return sum;
             }
 
-            // Recursive case: split in two halves
+            // Otherwise, split into two parallel subtasks
             int mid = lo + length / 2;
 
             Future<Double> leftFuture = pool.submit(
-                    new DotProductTask(A, x, row, lo, mid)
+                new DotProductTask(A, x, row, lo, mid)
             );
             Future<Double> rightFuture = pool.submit(
-                    new DotProductTask(A, x, row, mid, hi)
+                new DotProductTask(A, x, row, mid, hi)
             );
 
-            // Join the two partial sums
             double left = leftFuture.get();
             double right = rightFuture.get();
 

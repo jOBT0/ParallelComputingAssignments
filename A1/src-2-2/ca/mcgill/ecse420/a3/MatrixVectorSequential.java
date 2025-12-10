@@ -23,6 +23,7 @@ public class MatrixVectorSequential {
      * OPTIONAL: small tester to validate correctness.
      * You are allowed to remove this method if the assignment requires only the implementation.
      */
+    
     public static void main(String[] args) {
         double[][] A = {
             {1, 2, 3},
