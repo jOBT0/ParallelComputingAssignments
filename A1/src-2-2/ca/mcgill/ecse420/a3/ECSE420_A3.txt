@@ -1,0 +1,20 @@
+1.1
+L' is the cache size. When L < L', the whole array fits in the cache and t0 is the time of a cache hit read access.
+
+1.2
+This is when the array is larger than the cache size, and t1 is the time of a cache miss read access.
+
+1.3
+1: If the whole array fits in the cache, then any access to it will always be a cache hit. Therefore the time to access elements is always the same; it is constant and we see a straight, flat line curve.
+2: For smaller strides, most elements are still cached, but we begin to have cache misses because not everything can fit and we need to swap cache lines. As the stride increases, the number of cache misses also increases, which makes the average time per access go up. 
+3: At this point, the stride is so big that even though we cache elements, enough cache misses occur that the elements are replaced before they can be accessed from the cache. Therefore, for any access to an element, it will always be found in memory instead of the cache, so the time to access is always t1, the cache miss penalty.
+
+1.4
+Without padding, flags of the locks can be close together in memory and share the same cache line. Since threads modify the flags, the cache lines are invalidated, which causes cache misses. This is the false sharing phenomenon. Padding attempts to solve this issue by putting flags in different cache lines, to avoid the unecesary memory accesses, and better use the cache. However, given the example we studied, padding exponentially increases the average access time by increasing cache misses (region 2). At a certain point, too much padding would cause all accesses to be memory accesses (region 3). For small flags arrays, this could be okay and we could fall into region 1 or the start of region 2, which is a tradeoff we can balance.
+
+
+2.1
+The contains() method implements "hand-over-hand locking" by acquiring the lock on the current node "curr" before releasing the lock on its predecessor "pred". This creates a moving "safe window" that prevents other threads from inserting or removing nodes between "pred" and "curr" while the traversal is in progress. The final check (curr.key == key) occurs while holding locks on both nodes, ensuring the method sees a consistent state at that moment.
+
+2.2
+The test runs the contains() method concurrently with active add() and remove() threads, making sure that the we always returns accurate results even while the list structure changes. Successful completion without hanging confirms that the method uses a locking order that prevent deadlocks. 
